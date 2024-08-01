@@ -56,9 +56,9 @@ class App:
         self.animated_sprite(40, 24, self.button_sprites["button_right"])
         self.animated_sprite(24, 40, self.button_sprites["button_down"])
 
-        self.animated_sprite(self.sp_mid_x, self.sp_mid_y, self.target_sprite)
         for button in self.current_buttons:
             self.animated_sprite(button["offset"], self.sp_mid_y, button["sprite"])
+        self.animated_sprite(self.sp_mid_x, self.sp_mid_y, self.target_sprite)
 
     def animated_sprite(self, x, y, sprite):
         if self.running:
