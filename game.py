@@ -30,9 +30,12 @@ class App:
         self.current_buttons = []
         self.offset_counter = 1
         self.animated_sprite_index = 0
+        self.button_generator = self.create_button_generator()
         pyxel.run(self.update, self.draw)
 
     def update(self):
+        if pyxel.frame_count % self.fpb == 0 and self.running:
+            pyxel.play(0, 0)
         if pyxel.btnp(pyxel.KEY_RETURN):
             self.running = not self.running
         if len(self.current_buttons) < 10:
@@ -53,10 +56,9 @@ class App:
         self.animated_sprite(40, 24, self.button_sprites["button_right"])
         self.animated_sprite(24, 40, self.button_sprites["button_down"])
 
+        self.animated_sprite(self.sp_mid_x, self.sp_mid_y, self.target_sprite)
         for button in self.current_buttons:
             self.animated_sprite(button["offset"], self.sp_mid_y, button["sprite"])
-
-        self.animated_sprite(self.sp_mid_x, self.sp_mid_y, self.target_sprite)
 
     def animated_sprite(self, x, y, sprite):
         if self.running:
@@ -67,22 +69,20 @@ class App:
 
         pyxel.blt(x, y, *sprite[self.animated_sprite_index])
 
-    def button_generator(self):
+    def create_button_generator(self):
         while True:
             yield random.choice(list(self.button_sprites.values()))
 
     def button_streamer(self):
-        sprite = next(self.button_generator())
+        sprite = next(self.button_generator)
         sprite_width = sprite[0][3]
-        offset = -sprite_width * self.offset_counter
-        offset -= (sprite_width / 2) * self.offset_counter
+        offset = -sprite_width * (len(self.current_buttons) + 1) * 1.5
         self.current_buttons.append({"offset": offset, "sprite": sprite})
-        self.offset_counter += 1
 
     def button_scroller(self):
         for button in self.current_buttons:
             sprite_width = button["sprite"][0][3]
-            adjustment = (sprite_width + sprite_width / 2) / self.fpb
+            adjustment = (sprite_width * 1.5) / self.fpb
             button["offset"] += adjustment
 
 
