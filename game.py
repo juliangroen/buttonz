@@ -5,6 +5,50 @@ import pyxel
 WINDOW_WIDTH = 256
 WINDOW_HEIGHT = 256
 FPS = 60
+BUTTON_SPRITES = {
+    "button_a": [(0, 0, 0, 16, 16, 13), (0, 16, 0, 16, 16, 13)],
+    "button_b": [(0, 0, 16, 16, 16, 13), (0, 16, 16, 16, 16, 13)],
+    "button_x": [(0, 0, 32, 16, 16, 13), (0, 16, 32, 16, 16, 13)],
+    "button_y": [(0, 0, 48, 16, 16, 13), (0, 16, 48, 16, 16, 13)],
+    "button_down": [(0, 0, 64, 16, 16, 13), (0, 16, 64, 16, 16, 13)],
+    "button_right": [(0, 0, 80, 16, 16, 13), (0, 16, 80, 16, 16, 13)],
+    "button_left": [(0, 0, 96, 16, 16, 13), (0, 16, 96, 16, 16, 13)],
+    "button_up": [(0, 0, 112, 16, 16, 13), (0, 16, 112, 16, 16, 13)],
+}
+
+
+class Button:
+    def __init__(self, x, y, sprite_name):
+        self._x = x
+        self._y = y
+        self._sprite = BUTTON_SPRITES[sprite_name]
+        self._width = self.sprite[0][3]
+
+    @property
+    def x(self):
+        """The x cordinate"""
+        return self._x
+
+    @x.setter
+    def x(self, value):
+        self._x = value
+
+    @property
+    def y(self):
+        """The y cordinate"""
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        self._y = value
+
+    @property
+    def sprite(self):
+        return self._sprite
+
+    @property
+    def width(self):
+        return self._width
 
 
 class App:
@@ -12,23 +56,12 @@ class App:
         pyxel.init(WINDOW_WIDTH, WINDOW_HEIGHT, fps=FPS)
         pyxel.load("./assets.pyxres")
         self.running = False
-        self.button_sprites = {
-            "button_a": [(0, 0, 0, 16, 16, 13), (0, 16, 0, 16, 16, 13)],
-            "button_b": [(0, 0, 16, 16, 16, 13), (0, 16, 16, 16, 16, 13)],
-            "button_x": [(0, 0, 32, 16, 16, 13), (0, 16, 32, 16, 16, 13)],
-            "button_y": [(0, 0, 48, 16, 16, 13), (0, 16, 48, 16, 16, 13)],
-            "button_down": [(0, 0, 64, 16, 16, 13), (0, 16, 64, 16, 16, 13)],
-            "button_right": [(0, 0, 80, 16, 16, 13), (0, 16, 80, 16, 16, 13)],
-            "button_left": [(0, 0, 96, 16, 16, 13), (0, 16, 96, 16, 16, 13)],
-            "button_up": [(0, 0, 112, 16, 16, 13), (0, 16, 112, 16, 16, 13)],
-        }
         self.target_sprite = [(0, 48, 0, 16, 16, 13), (0, 32, 0, 16, 16, 13)]
         self.sp_mid_x = (WINDOW_WIDTH // 2) - 8
         self.sp_mid_y = (WINDOW_HEIGHT // 2) - 8
         self.bpm = 120
         self.fpb = (FPS * 60) // self.bpm
         self.current_buttons = []
-        self.offset_counter = 1
         self.animated_sprite_index = 0
         self.button_generator = self.create_button_generator()
         pyxel.run(self.update, self.draw)
@@ -46,18 +79,21 @@ class App:
     def draw(self):
         pyxel.cls(0)
         pyxel.rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 13)
-        self.animated_sprite(80, 8, self.button_sprites["button_y"])
-        self.animated_sprite(64, 24, self.button_sprites["button_x"])
-        self.animated_sprite(96, 24, self.button_sprites["button_b"])
-        self.animated_sprite(80, 40, self.button_sprites["button_a"])
+        self.animated_sprite(80, 8, BUTTON_SPRITES["button_y"])
+        self.animated_sprite(64, 24, BUTTON_SPRITES["button_x"])
+        self.animated_sprite(96, 24, BUTTON_SPRITES["button_b"])
+        self.animated_sprite(80, 40, BUTTON_SPRITES["button_a"])
 
-        self.animated_sprite(24, 8, self.button_sprites["button_up"])
-        self.animated_sprite(8, 24, self.button_sprites["button_left"])
-        self.animated_sprite(40, 24, self.button_sprites["button_right"])
-        self.animated_sprite(24, 40, self.button_sprites["button_down"])
+        self.animated_sprite(24, 8, BUTTON_SPRITES["button_up"])
+        self.animated_sprite(8, 24, BUTTON_SPRITES["button_left"])
+        self.animated_sprite(40, 24, BUTTON_SPRITES["button_right"])
+        self.animated_sprite(24, 40, BUTTON_SPRITES["button_down"])
 
         for button in self.current_buttons:
-            self.animated_sprite(button["offset"], self.sp_mid_y, button["sprite"])
+            if button.x > (self.sp_mid_x + button.width):
+                pyxel.dither(0.50)
+            self.animated_sprite(button.x, self.sp_mid_y, button.sprite)
+            pyxel.dither(1)
         self.animated_sprite(self.sp_mid_x, self.sp_mid_y, self.target_sprite)
 
     def animated_sprite(self, x, y, sprite):
@@ -71,26 +107,28 @@ class App:
 
     def create_button_generator(self):
         while True:
-            yield random.choice(list(self.button_sprites.values()))
+            sprite_name = random.choice(list(BUTTON_SPRITES.keys()))
+            yield Button(0, 0, sprite_name)
 
     def button_streamer(self):
-        sprite = next(self.button_generator)
-        sprite_width = sprite[0][3]
+        button = next(self.button_generator)
+        sprite_width = button.width
         offset = -sprite_width * (len(self.current_buttons) + 1) * 1.5
-        self.current_buttons.append({"offset": offset, "sprite": sprite})
+        button.x = offset
+        self.current_buttons.append(button)
 
     def button_scroller(self):
         for button in self.current_buttons:
-            sprite_width = button["sprite"][0][3]
+            sprite_width = button.width
             adjustment = (sprite_width * 1.5) / self.fpb
-            distance_to_center = self.sp_mid_x - button["offset"]
+            distance_to_center = self.sp_mid_x - button.x
 
             remainder = distance_to_center % adjustment
 
             if remainder != 0:
                 adjustment = distance_to_center / round(distance_to_center / adjustment)
 
-            button["offset"] += adjustment
+            button.x += adjustment
 
 
 App()
