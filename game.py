@@ -83,6 +83,13 @@ class App:
         for button in self.current_buttons:
             sprite_width = button["sprite"][0][3]
             adjustment = (sprite_width * 1.5) / self.fpb
+            distance_to_center = self.sp_mid_x - button["offset"]
+
+            remainder = distance_to_center % adjustment
+
+            if remainder != 0:
+                adjustment = distance_to_center / round(distance_to_center / adjustment)
+
             button["offset"] += adjustment
 
 
