@@ -64,14 +64,19 @@ class App:
         self.current_buttons = []
         self.animated_sprite_index = 0
         self.button_generator = self.create_button_generator()
+        pyxel.mouse(True)
         pyxel.run(self.update, self.draw)
 
     def update(self):
+        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+            if pyxel.mouse_x > WINDOW_WIDTH - 24 and pyxel.mouse_x < WINDOW_WIDTH:
+                if pyxel.mouse_y > WINDOW_HEIGHT - 24 and pyxel.mouse_y < WINDOW_HEIGHT:
+                    self.running = not self.running
         if pyxel.frame_count % self.fpb == 0 and self.running:
             pyxel.play(0, 0)
         if pyxel.btnp(pyxel.KEY_RETURN):
             self.running = not self.running
-        if len(self.current_buttons) < 10:
+        if len(self.current_buttons) < 256:
             self.button_streamer()
         if self.running:
             self.button_scroller()
@@ -90,11 +95,16 @@ class App:
         self.animated_sprite(24, 40, BUTTON_SPRITES["button_down"])
 
         for button in self.current_buttons:
-            if button.x > (self.sp_mid_x + button.width):
+            if button.x > (self.sp_mid_x + button.width // 4):
                 pyxel.dither(0.50)
             self.animated_sprite(button.x, self.sp_mid_y, button.sprite)
             pyxel.dither(1)
         self.animated_sprite(self.sp_mid_x, self.sp_mid_y, self.target_sprite)
+
+        if self.running:
+            pyxel.blt(WINDOW_WIDTH - 24, WINDOW_HEIGHT - 24, 0, 48, 16, 16, 16, 13)
+        else:
+            pyxel.blt(WINDOW_WIDTH - 24, WINDOW_HEIGHT - 24, 0, 32, 16, 16, 16, 13)
 
     def animated_sprite(self, x, y, sprite):
         if self.running:
