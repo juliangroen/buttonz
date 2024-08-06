@@ -24,15 +24,15 @@ class App:
         pyxel.load("../assets.pyxres")
         self.sp_mid_x = (WINDOW_WIDTH // 2) - 8
         self.sp_mid_y = (WINDOW_HEIGHT // 2) - 8
-        self.animated_sprite_index = 0
         self.button_generator = self.create_button_generator()
-        self.difficulty = 4
+        self.difficulty = 8
         self.button_pattern = []
         self.confirm_delay = 0
         self.input_counter = 0
         self.hp = 4
         self.score = 0
         self.flash = 0
+        self.timer = self.difficulty
         pyxel.mouse(True)
         pyxel.run(self.update, self.draw)
 
@@ -42,6 +42,7 @@ class App:
         self.hp = 4
         self.score = 0
         self.flash = 0
+        self.timer = self.difficulty // 2
         self.button_pattern = []
 
     def update(self):
@@ -62,24 +63,26 @@ class App:
             RUNNING = not RUNNING
 
         if RUNNING:
+            if pyxel.frame_count % 60 == 0:
+                self.timer -= 1
             self.button_input_controller()
             if self.pattern_checker():
                 if self.confirm_delay >= 15:
                     self.pattern_maker()
                     self.confirm_delay = 0
                 self.confirm_delay += 1
+            else:
+                if self.timer == 0:
+                    self.flash = 15
+                    self.hp -= 1
+                    self.pattern_maker()
+                    self.timer = self.difficulty // 2
 
     def draw(self):
         pyxel.cls(0)
 
-        pyxel.rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 13)
-        pyxel.rectb(
-            WINDOW_WIDTH // 4,
-            WINDOW_HEIGHT // 4,
-            WINDOW_WIDTH // 2,
-            WINDOW_HEIGHT // 2,
-            0,
-        )
+        pyxel.rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 14)
+        self.pattern_timer()
 
         if self.flash > 0:
             pyxel.rectb(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 8)
@@ -99,14 +102,32 @@ class App:
         pyxel.text(8, 8, f"LIVES: {self.hp}/4", 0)
         pyxel.text(8, 16, f"SCORE: {self.score}", 0)
 
-    def animated_sprite(self, x, y, sprite):
-        if RUNNING:
-            if (pyxel.frame_count // 30) % 2 == 0:
-                self.animated_sprite_index = 1
-            else:
-                self.animated_sprite_index = 0
+        if not RUNNING:
+            self.pause_screen()
 
-        pyxel.blt(x, y, *sprite[self.animated_sprite_index])
+    def pause_screen(self):
+        x = WINDOW_WIDTH // 4
+        y = WINDOW_HEIGHT // 4
+        w = WINDOW_WIDTH // 2
+        h = WINDOW_HEIGHT // 2
+        pyxel.rect(x + 4, y + 4, w, h, 0)
+        pyxel.rect(x, y, w, h, 6)
+        pyxel.rect(x + 4, y + 4, w - 8, h - 8, 1)
+        pyxel.text(x + 8, y + 8, "Complete each pattern", 6)
+        pyxel.text(x + 8, y + 16, "before the timer ends!", 6)
+        pyxel.text(x + 8, y + 32, "Wrong inputs and timer fail", 6)
+        pyxel.text(x + 8, y + 40, "reduce your HP!", 6)
+        pyxel.text(x + 8, y + 80, "Controller: (START) to start!", 6)
+        pyxel.text(x + 8, y + 88, "Mobile: Click btn to start!", 6)
+        pyxel.text(x + 8, y + 96, "Keyboard: RETURN to start!", 6)
+        pyxel.text(x + 8, y + 104, "D-Pad = W A S D", 6)
+        pyxel.text(x + 8, y + 112, "A B X Y = K L J I", 6)
+
+    def pattern_timer(self):
+        block_size = WINDOW_HEIGHT // (self.difficulty // 2)
+        for i in range(self.timer):
+            y = WINDOW_HEIGHT - ((i + 1) * block_size)
+            pyxel.rect(0, y, WINDOW_WIDTH, block_size, 13)
 
     def create_button_generator(self):
         while True:
@@ -121,7 +142,7 @@ class App:
                 button.hit = 1
                 self.score += 1
 
-            if self.input_counter == 3:
+            if self.input_counter == self.difficulty - 1:
                 self.input_counter = 0
             else:
                 self.input_counter += 1
@@ -136,6 +157,7 @@ class App:
         return True
 
     def pattern_maker(self):
+        self.timer = self.difficulty // 2
         self.button_pattern = []
         grid = self.button_grid_cords()
         for _ in range(self.difficulty):
@@ -149,7 +171,7 @@ class App:
         cell = 24
         width = cell * total
         x = (WINDOW_WIDTH // 2) - (width // 2) + 4
-        y = WINDOW_HEIGHT // 2
+        y = (WINDOW_HEIGHT // 2) - 8
 
         for i in range(total):
             coordinates.append((x + (cell * i), y))
