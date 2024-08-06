@@ -31,12 +31,15 @@ class App:
         self.input_counter = 0
         self.hp = 4
         self.score = 0
+        self.high_score = 0
         self.flash = 0
         self.timer = self.difficulty
         pyxel.mouse(True)
         pyxel.run(self.update, self.draw)
 
     def restart_game(self):
+        if self.score > self.high_score:
+            self.high_score = self.score
         self.confirm_delay = 0
         self.input_counter = 0
         self.hp = 4
@@ -101,6 +104,7 @@ class App:
 
         pyxel.text(8, 8, f"LIVES: {self.hp}/4", 0)
         pyxel.text(8, 16, f"SCORE: {self.score}", 0)
+        pyxel.text(8, 24, f"HIGH SCORE: {self.high_score}", 0)
 
         if not RUNNING:
             self.pause_screen()
@@ -142,9 +146,10 @@ class App:
                 button.hit = 1
                 self.score += 1
 
-            if self.input_counter == self.difficulty - 1:
-                self.input_counter = 0
-            else:
+                # if self.input_counter == self.difficulty - 1:
+                #     self.input_counter = 0
+                # else:
+                #     self.input_counter += 1
                 self.input_counter += 1
         else:
             self.flash = 15
@@ -159,6 +164,7 @@ class App:
     def pattern_maker(self):
         self.timer = self.difficulty // 2
         self.button_pattern = []
+        self.input_counter = 0
         grid = self.button_grid_cords()
         for _ in range(self.difficulty):
             button = next(self.button_generator)
