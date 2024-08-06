@@ -21,7 +21,7 @@ BUTTON_SPRITES = {
 class App:
     def __init__(self):
         pyxel.init(WINDOW_WIDTH, WINDOW_HEIGHT, fps=FPS)
-        pyxel.load("../assets.pyxres")
+        pyxel.load("./assets.pyxres")
         self.sp_mid_x = (WINDOW_WIDTH // 2) - 8
         self.sp_mid_y = (WINDOW_HEIGHT // 2) - 8
         self.button_generator = self.create_button_generator()
