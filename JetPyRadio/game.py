@@ -148,8 +148,8 @@ class App:
         total = self.difficulty
         cell = 24
         width = cell * total
-        x = self.sp_mid_x - (width // 2) + 8
-        y = self.sp_mid_y
+        x = (WINDOW_WIDTH // 2) - (width // 2) + 4
+        y = WINDOW_HEIGHT // 2
 
         for i in range(total):
             coordinates.append((x + (cell * i), y))
